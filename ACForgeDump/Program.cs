@@ -23,7 +23,9 @@ namespace ACForgeDump
     {
         public int Size;
         public long FileID;
-        public byte[] Unk01;
+        public int Unk00;
+        public long FileType;
+        public int Unk01;
         public int NextFileCount;
         public int PreviousFileCount;
         public int Unk02;
@@ -108,7 +110,9 @@ namespace ACForgeDump
                     NameEntry entry;
                     entry.Size = reader.ReadInt32();
                     entry.FileID = reader.ReadInt64();
-                    entry.Unk01 = reader.ReadBytes(4 * 4);
+                    entry.Unk00 = reader.ReadInt32();
+                    entry.FileType = reader.ReadInt64();
+                    entry.Unk01 = reader.ReadInt32();
                     entry.NextFileCount = reader.ReadInt32();
                     entry.PreviousFileCount = reader.ReadInt32();
                     entry.Unk02 = reader.ReadInt32();
@@ -120,12 +124,17 @@ namespace ACForgeDump
                     nameEntries[i] = entry;
                 }
 
+                string directory = args[0].Remove(args[0].Length - 5, 5);
+
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+
                 for (int i = 0; i != numEntries; i++)
                 {
                     reader.BaseStream.Seek((long)indexEntries[i].StartPos, SeekOrigin.Begin);
                     nameEntries[i].FileData = reader.ReadBytes(nameEntries[i].Size);
 
-                    using (BinaryWriter writer = new BinaryWriter(File.Open(nameEntries[i].Name + ".dat", FileMode.Create)))
+                    using (BinaryWriter writer = new BinaryWriter(File.Open(directory + "/" + nameEntries[i].Name + ".dat", FileMode.Create)))
                     {
                         writer.Write(nameEntries[i].FileData);
                     }
